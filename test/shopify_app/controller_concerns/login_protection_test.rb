@@ -409,8 +409,19 @@ class LoginProtectionControllerTest < ActionController::TestCase
       cookies.encrypted[ShopifyAPI::Auth::Oauth::SessionCookie::SESSION_COOKIE_NAME] = "cookie"
 
       get :raise_unauthorized, params: { shop: "foobar" }
-      assert_redirected_to "/login?shop=foobar.myshopify.com"
+      assert_redirected_to(
+        "/login?return_to=%2Fraise_unauthorized%3Fshop%3Dfoobar.myshopify.com&shop=foobar.myshopify.com",
+      )
       assert_nil cookies.encrypted[ShopifyAPI::Auth::Oauth::SessionCookie::SESSION_COOKIE_NAME]
+    end
+  end
+
+  test "#activate_shopify_session when rescuing from unauthorized access, breaks out of iframe in XHR requests" do
+    with_application_test_routes do
+      get :raise_unauthorized, params: { shop: "foobar" }, xhr: true
+      assert_equal 401, response.status
+      assert_match "1", response.headers["X-Shopify-API-Request-Failure-Reauthorize"]
+      assert_match "/login?shop=foobar", response.headers["X-Shopify-API-Request-Failure-Reauthorize-Url"]
     end
   end
 
@@ -423,6 +434,53 @@ class LoginProtectionControllerTest < ActionController::TestCase
       end
 
       assert_equal "cookie", cookies.encrypted[ShopifyAPI::Auth::Oauth::SessionCookie::SESSION_COOKIE_NAME]
+    end
+  end
+
+  test "#activate_shopify_session with an expired Shopify session redirects to the login url when check_session_expiry_date enabled" do
+    ShopifyApp.configuration.check_session_expiry_date = true
+
+    with_application_test_routes do
+      cookies.encrypted[ShopifyAPI::Auth::Oauth::SessionCookie::SESSION_COOKIE_NAME] = "cookie"
+      ShopifyApp::SessionRepository.expects(:load_session)
+        .returns(ShopifyAPI::Auth::Session.new(shop: "shop.myshopify.com", expires: 1.minute.ago))
+
+      get :index, params: { shop: "foobar" }
+
+      assert_redirected_to "/login?shop=foobar.myshopify.com"
+      assert_nil cookies.encrypted[ShopifyAPI::Auth::Oauth::SessionCookie::SESSION_COOKIE_NAME]
+    end
+  end
+
+  test "#activate_shopify_session with an expired Shopify session, when the request is an XHR, returns an HTTP 401 when check_session_expiry_date enabled" do
+    ShopifyApp.configuration.check_session_expiry_date = true
+
+    with_application_test_routes do
+      cookies.encrypted[ShopifyAPI::Auth::Oauth::SessionCookie::SESSION_COOKIE_NAME] = "cookie"
+      ShopifyApp::SessionRepository.expects(:load_session)
+        .returns(ShopifyAPI::Auth::Session.new(shop: "shop.myshopify.com", expires: 1.minute.ago))
+
+      get :index, params: { shop: "foobar" }, xhr: true
+
+      assert_equal 401, response.status
+      assert_match "1", response.headers["X-Shopify-API-Request-Failure-Reauthorize"]
+      assert_match "/login?shop=foobar", response.headers["X-Shopify-API-Request-Failure-Reauthorize-Url"]
+      assert_nil cookies.encrypted[ShopifyAPI::Auth::Oauth::SessionCookie::SESSION_COOKIE_NAME]
+    end
+  end
+
+  test "#activate_shopify_session with an expired Shopify session does not redirect to the login url when check_session_expiry_date disabled" do
+    ShopifyApp.configuration.check_session_expiry_date = false
+
+    with_application_test_routes do
+      cookies.encrypted[ShopifyAPI::Auth::Oauth::SessionCookie::SESSION_COOKIE_NAME] = "cookie"
+      ShopifyApp::SessionRepository.expects(:load_session)
+        .returns(ShopifyAPI::Auth::Session.new(shop: "shop.myshopify.com", expires: 1.minute.ago))
+      ::ShopifyAPI::Context.expects(:activate_session)
+
+      get :index, params: { shop: "foobar" }
+
+      assert_response :ok
     end
   end
 

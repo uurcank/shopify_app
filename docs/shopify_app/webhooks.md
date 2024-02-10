@@ -3,7 +3,7 @@
 #### Table of contents
 
 [Manage webhooks using `ShopifyApp::WebhooksManager`](#manage-webhooks-using-shopifyappwebhooksmanager)
-[Mandatory GDPR Webhooks](#mandatory-gdpr-webhooks)
+[Mandatory Privacy Webhooks](#mandatory-privacy-webhooks)
 
 ## Manage webhooks using `ShopifyApp::WebhooksManager`
 
@@ -13,7 +13,7 @@ ShopifyApp can manage your app's webhooks for you if you set which webhooks you 
 ```ruby
 ShopifyApp.configure do |config|
   config.webhooks = [
-    {topic: 'carts/update', path: 'webhooks/carts_update'}
+    {topic: 'carts/update', path: 'api/webhooks/carts_update'}
   ]
 end
 ```
@@ -35,7 +35,21 @@ If you are only interested in particular fields, you can optionally filter the d
 ```ruby
 ShopifyApp.configure do |config|
   config.webhooks = [
-    {topic: 'products/update', path: 'webhooks/products_update', fields: ['title', 'vendor']}
+    {topic: 'products/update', path: 'api/webhooks/products_update', fields: ['title', 'vendor']}
+  ]
+end
+```
+
+If you need to read metafields, you can pass in the `metafield_namespaces` parameter in `config/webhooks`. Note if you are also using the `fields` parameter you will need to add `metafields` into that as well. Shopify documentation on metafields in webhooks can be found [here](https://shopify.dev/docs/api/admin-rest/2023-10/resources/webhook#resource-object).
+
+```ruby
+ShopifyApp.configure do |config|
+  config.webhooks = [
+    {
+      topic: 'orders/create',
+      path: 'api/webhooks/order_create',
+      metafield_namespaces: ['app-namespace'],
+    },
   ]
 end
 ```
@@ -72,9 +86,9 @@ rails g shopify_app:add_webhook --topic carts/update --path webhooks/carts_updat
 
 Where `--topic` is the topic and `--path` is the path the webhook should be sent to.
 
-## Mandatory GDPR Webhooks
+## Mandatory Privacy Webhooks
 
-We have three mandatory GDPR webhooks
+We have three mandatory privacy webhooks
 
 1. `customers/data_request`
 2. `customer/redact`

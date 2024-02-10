@@ -4,23 +4,27 @@ Sessions are used to make contextual API calls for either a shop (offline sessio
 
 #### Table of contents
 
-- [Sessions](#sessions-1)
-  - [Types of session tokens](#types-of-session-tokens) - Shop (offline) v.s. User (online)
-  - [Session token storage](#session-token-storage)
-      - [Shop (offline) token storage](#shop-offline-token-storage)
-      - [User (online) token storage](#user-online-token-storage)
-      - [In-Memory Session Storage for Testing](#in-memory-session-storage-for-testing)
-      - [Customizing Session Storage with `ShopifyApp::SessionRepository`](#customizing-session-storage-with-shopifyappsessionrepository)
-  - [Loading Sessions](#loading-sessions)
+- [Sessions](#sessions)
+      - [Table of contents](#table-of-contents)
+  - [Sessions](#sessions-1)
+      - [Types of session tokens](#types-of-session-tokens)
+      - [Session token storage](#session-token-storage)
+        - [Shop (offline) token storage](#shop-offline-token-storage)
+        - [User (online) token storage](#user-online-token-storage)
+        - [In-memory Session Storage for testing](#in-memory-session-storage-for-testing)
+        - [Customizing Session Storage with `ShopifyApp::SessionRepository`](#customizing-session-storage-with-shopifyappsessionrepository)
+        - [⚠️  Custom Session Storage Requirements](#️--custom-session-storage-requirements)
+        - [Available `ActiveSupport::Concerns` that contains implementation of the above methods](#available-activesupportconcerns-that-contains-implementation-of-the-above-methods)
+    - [Loading Sessions](#loading-sessions)
       - [Getting Sessions with Controller Concerns](#getting-sessions-with-controller-concerns)
-        - [Shop session - "EnsureInstalled" ](#shop-sessions---ensureinstalled)
-        - [User session - "EnsureHasSession" ](#user-sessions---ensurehassession)
-      - [Getting Sessions from a Shop or User model record - "with_shopify_session"](#getting-sessions-from-a-shop-or-user-model-record---with_shopify_session)
-- [Access scopes](#access-scopes)
-  - [`ShopifyApp::ShopSessionStorageWithScopes`](#shopifyappshopsessionstoragewithscopes)
-  - [``ShopifyApp::UserSessionStorageWithScopes``](#shopifyappusersessionstoragewithscopes)
-- [Migrating from shop-based to user-based token strategy](#migrating-from-shop-based-to-user-based-token-strategy)
-- [Migrating from ShopifyApi::Auth::SessionStorage to ShopifyApp::SessionStorage](#migrating-from-shopifyapiauthsessionstorage-to-shopifyappsessionstorage)
+        - [**Shop Sessions - `EnsureInstalled`**](#shop-sessions---ensureinstalled)
+        - [User Sessions - `EnsureHasSession`](#user-sessions---ensurehassession)
+      - [Getting sessions from a Shop or User model record - 'with\_shopify\_session'](#getting-sessions-from-a-shop-or-user-model-record---with_shopify_session)
+  - [Access scopes](#access-scopes)
+    - [`ShopifyApp::ShopSessionStorageWithScopes`](#shopifyappshopsessionstoragewithscopes)
+    - [`ShopifyApp::UserSessionStorageWithScopes`](#shopifyappusersessionstoragewithscopes)
+  - [Migrating from shop-based to user-based token strategy](#migrating-from-shop-based-to-user-based-token-strategy)
+  - [Migrating from `ShopifyApi::Auth::SessionStorage` to `ShopifyApp::SessionStorage`](#migrating-from-shopifyapiauthsessionstorage-to-shopifyappsessionstorage)
 
 ## Sessions
 #### Types of session tokens
@@ -103,6 +107,7 @@ The custom **Shop** repository must implement the following methods:
 | `self.store(auth_session)`                        | `auth_session` (ShopifyAPI::Auth::Session) | -                         |
 | `self.retrieve(id)`                               | `id` (String)                              | ShopifyAPI::Auth::Session |
 | `self.retrieve_by_shopify_domain(shopify_domain)` | `shopify_domain` (String)                  | ShopifyAPI::Auth::Session |
+| `self.destroy_by_shopify_domain(shopify_domain)`  | `shopify_domain` (String)                  | -                         |
 
 The custom **User** repository must implement the following methods:
 | Method                                      | Parameters                          | Return Type                  |
@@ -110,6 +115,7 @@ The custom **User** repository must implement the following methods:
 | `self.store(auth_session, user)`            | <li>`auth_session` (ShopifyAPI::Auth::Session)<br><li>`user` (ShopifyAPI::Auth::AssociatedUser) | - |
 | `self.retrieve(id)`                         | `id` (String)                       | `ShopifyAPI::Auth::Session`  |
 | `self.retrieve_by_shopify_user_id(user_id)` | `user_id` (String)                  | `ShopifyAPI::Auth::Session`  |
+| `self.destroy_by_shopify_user_id(user_id)`  | `user_id` (String)                  | -                            |
 
 
 These methods are already implemented as a part of the `User` and `Shop` models generated from this gem's generator.
@@ -153,7 +159,7 @@ end
 ```
 
 ##### User Sessions - `EnsureHasSession`
-- [EnsureHasSession](https://github.com/Shopify/shopify_app/blob/main/app/controllers/concerns/shopify_app/ensure_has_session.rb) controller concern will load a user session via `current_shopify_session`. As part of loading this session, this concern will also ensure that the user session has the appropriate scopes needed for the application. If the user isn't found or has fewer permitted scopes than are required, they will be prompted to authorize the application.
+- [EnsureHasSession](https://github.com/Shopify/shopify_app/blob/main/app/controllers/concerns/shopify_app/ensure_has_session.rb) controller concern will load a user session via `current_shopify_session`. As part of loading this session, this concern will also ensure that the user session has the appropriate scopes needed for the application and that it is not expired (when `check_session_expiry_date` is enabled). If the user isn't found or has fewer permitted scopes than are required, they will be prompted to authorize the application.
 - This controller concern should be used if you don't need your app to make calls on behalf of a user. With that in mind, there are a few other embedded concerns that are mixed in to ensure that embedding, CSRF, localization, and billing allow the action for the user.
 - Example
 ```ruby
@@ -227,6 +233,9 @@ class User < ActiveRecord::Base
   end
 end
 ```
+
+## Expiry date
+When the configuration flag `check_session_expiry_date` is set to true, the user session expiry date will be checked to trigger a re-auth and get a fresh user token when it is expired. This requires the `ShopifyAPI::Auth::Session` `expires` attribute to be stored. When the `User` model includes the `UserSessionStorageWithScopes` concern, a DB migration can be generated with `rails generate shopify_app:user_model --skip` to add the `expires_at` attribute to the model.
 
 ## Migrating from shop-based to user-based token strategy
 
