@@ -30,12 +30,6 @@ module ShopifyApp
         return redirect_to_login
       end
 
-      if ShopifyApp.configuration.check_session_expiry_date && current_shopify_session.expired?
-        ShopifyApp::Logger.debug("Session expired, redirecting to login")
-        clear_shopify_session
-        return redirect_to_login
-      end
-
       if ShopifyApp.configuration.reauth_on_access_scope_changes &&
           !ShopifyApp.configuration.user_access_scopes_strategy.covers_scopes?(current_shopify_session)
         clear_shopify_session
@@ -147,11 +141,10 @@ module ShopifyApp
     end
 
     def close_session
-      ShopifyApp::Logger.debug("Closing session")
       clear_shopify_session
-
-      ShopifyApp::Logger.debug("Redirecting to login")
-      redirect_to_login
+      ShopifyApp::Logger.debug("Closing session")
+      ShopifyApp::Logger.debug("Redirecting to #{login_url_with_optional_shop}")
+      redirect_to(login_url_with_optional_shop)
     end
 
     def handle_http_error(error)
@@ -287,8 +280,8 @@ module ShopifyApp
 
     def requested_by_javascript?
       request.xhr? ||
-        request.media_type == "text/javascript" ||
-        request.media_type == "application/javascript"
+        request.content_type == "text/javascript" ||
+        request.content_type == "application/javascript"
     end
   end
 end

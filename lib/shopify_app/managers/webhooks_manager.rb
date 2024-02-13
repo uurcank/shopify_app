@@ -26,7 +26,6 @@ module ShopifyApp
 
         ShopifyApp::Logger.debug("Recreating webhooks")
         add_registrations
-        create_webhooks(session: session)
       end
 
       def destroy_webhooks(session:)
@@ -52,7 +51,6 @@ module ShopifyApp
             path: webhook_path,
             handler: delivery_method == :http ? webhook_job_klass(webhook_path) : nil,
             fields: attributes[:fields],
-            metafield_namespaces: attributes[:metafield_namespaces],
           )
         end
       end

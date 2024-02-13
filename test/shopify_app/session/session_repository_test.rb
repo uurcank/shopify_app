@@ -140,21 +140,21 @@ module ShopifyApp
     end
 
     test(".delete_session destroys a shop record") do
-      SessionRepository.shop_storage = InMemoryShopSessionStore
-      mock_session_id = "offline_abra-shop"
+      shop = MockShopInstance.new(shopify_domain: "shop", shopify_token: "token")
 
-      InMemoryShopSessionStore.expects(:destroy_by_shopify_domain).with("abra-shop")
+      Shop.expects(:find_by).with(shopify_domain: "shop").returns(shop)
+      shop.expects(:destroy)
 
-      SessionRepository.delete_session(mock_session_id)
+      SessionRepository.delete_session("offline_shop")
     end
 
     test(".delete_session destroys a user record") do
-      SessionRepository.user_storage = InMemoryUserSessionStore
-      mock_session_id = "test_shop.myshopify.com_1234"
+      user = MockUserInstance.new(shopify_domain: "shop", shopify_token: "token")
 
-      InMemoryUserSessionStore.expects(:destroy_by_shopify_user_id).with("1234")
+      User.expects(:find_by).with(shopify_user_id: "1234").returns(user)
+      user.expects(:destroy)
 
-      SessionRepository.delete_session(mock_session_id)
+      SessionRepository.delete_session("shop_1234")
     end
 
     private

@@ -1,32 +1,5 @@
 Unreleased
 ----------
-* Make type param for webhooks route optional. This will fix a bug with CLI initiated webhooks.[1786](https://github.com/Shopify/shopify_app/pull/1786)
-* Fix redirecting to login when we catch a 401 response from Shopify, so that it can also handle cases where the app is already embedded when that happens.[1787](https://github.com/Shopify/shopify_app/pull/1787)
-* Always register webhooks with offline sessions.[1788](https://github.com/Shopify/shopify_app/pull/1788)
-
-21.10.0 (January 24, 2024)
-----------
-* Fix session deletion for users with customized session storage[#1773](https://github.com/Shopify/shopify_app/pull/1773)
-* Add configuration flag `check_session_expiry_date` to trigger a re-auth when the (user) session is expired. The session expiry date must be stored and retrieved for this flag to be effective. When the `UserSessionStorageWithScopes` concern is used, a DB migration can be generated with `rails generate shopify_app:user_model --skip` and should be applied before enabling that flag[#1757](https://github.com/Shopify/shopify_app/pull/1757)
-
-21.9.0 (January 16, 2024)
-----------
-* Fix `add_webhook` generator to create the webhook jobs under the correct directory[#1748](https://github.com/Shopify/shopify_app/pull/1748)
-* Add support for metafield_namespaces in webhook registration [#1745](https://github.com/Shopify/shopify_app/pull/1745)
-* Bumps `shopify_api` to latest version (13.4.0), adds support for 2024-01 API version [#1776](https://github.com/Shopify/shopify_app/pull/1776)
-
-21.8.1 (December 6, 2023)
-----------
-* Bump `shopify_api` to 13.3.1 [1763](https://github.com/Shopify/shopify-api-ruby/blob/main/CHANGELOG.md#1331)
-
-21.8.0 (Dec 1, 2023)
-----------
-* Bump `shopify_api` to include bugfix with mandatory webhooks + fixes for CI failures that prevented earlier release
-* Fixes bug with `WebhooksManager#recreate_webhooks!` where we failed to register topics in the registry[#1743](https://github.com/Shopify/shopify_app/pull/1704)
-* Allow embedded apps to provide a full URL to get redirected to, rather than defaulting to Shopify Admin [#1746](https://github.com/Shopify/shopify_app/pull/1746)
-
-21.7.0 (Oct 12, 2023)
-----------
 * Fixes typo in webhook generator [#1704](https://github.com/Shopify/shopify_app/pull/1704)
 * Fix registration of event_bridge and pub_sub webhooks [#1635](https://github.com/Shopify/shopify_app/pull/1635)
 * Adds support for adding any number of trial days within `EnsureBilling` by adding the `trial_days` field to `BillingConfiguration`
@@ -34,7 +7,7 @@ Unreleased
 * Support falling back to 2 letter language code locales [#1711](https://github.com/Shopify/shopify_app/pull/1711)
 * Fix locale leaks across requests [#1711](https://github.com/Shopify/shopify_app/pull/1711)
 * Fix bug in `InMemoryUserSessionStore#store`, this can now be used out of box. [#1716](https://github.com/Shopify/shopify_app/pull/1716)
-* Adds support for 2023-10 API version [#1734](https://github.com/Shopify/shopify_app/pull/1734)
+
 
 21.6.0 (July 11, 2023)
 ----------

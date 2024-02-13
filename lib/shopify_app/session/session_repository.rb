@@ -23,14 +23,6 @@ module ShopifyApp
         user_storage.retrieve_by_shopify_user_id(user_id)
       end
 
-      def destroy_shop_session_by_domain(shopify_domain)
-        shop_storage.destroy_by_shopify_domain(shopify_domain)
-      end
-
-      def destroy_user_session_by_shopify_user_id(user_id)
-        user_storage.destroy_by_shopify_user_id(user_id)
-      end
-
       def store_shop_session(session)
         shop_storage.store(session)
       end
@@ -81,16 +73,17 @@ module ShopifyApp
       def delete_session(id)
         match = id.match(/^offline_(.*)/)
 
-        if match
+        record = if match
           domain = match[1]
           ShopifyApp::Logger.debug("Destroying session by domain - domain: #{domain}")
-          destroy_shop_session_by_domain(domain)
-
+          Shop.find_by(shopify_domain: match[1])
         else
           shopify_user_id = id.split("_").last
           ShopifyApp::Logger.debug("Destroying session by user - user_id: #{shopify_user_id}")
-          destroy_user_session_by_shopify_user_id(shopify_user_id)
+          User.find_by(shopify_user_id: shopify_user_id)
         end
+
+        record.destroy
 
         true
       end

@@ -20,7 +20,6 @@ module ShopifyApp
     attr_accessor :api_version
 
     attr_accessor :reauth_on_access_scope_changes
-    attr_accessor :check_session_expiry_date
     attr_accessor :log_level
 
     # customise urls
@@ -44,9 +43,6 @@ module ShopifyApp
 
     # takes a ShopifyApp::BillingConfiguration object
     attr_accessor :billing
-
-    # Work in Progress: enables token exchange authentication flow
-    attr_accessor :wip_new_embedded_auth_strategy
 
     def initialize
       @root_url = "/"
@@ -121,10 +117,6 @@ module ShopifyApp
 
     def user_access_scopes
       @user_access_scopes || scope
-    end
-
-    def use_new_embedded_auth_strategy?
-      wip_new_embedded_auth_strategy && embedded_app?
     end
   end
 
