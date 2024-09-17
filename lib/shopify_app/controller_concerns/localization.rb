@@ -17,7 +17,7 @@ module ShopifyApp
     end
 
     def find_locale
-      locale_from_params || locale_from_header || I18n.default_locale
+      locale_from_params || locale_from_session || locale_from_header || I18n.default_locale
     end
 
     def locale_from_params
