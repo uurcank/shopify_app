@@ -36,11 +36,11 @@ module ShopifyApp
     # Makes sure locale is in the available locales list
     def permit_locale(locale)
       # First, check if the full locale (e.g., 'es-MX') is available
-      return locale if locale.presence_in(I18n.config.config.available_locales_set)
+      return locale if locale.presence_in(I18n.config.available_locales_set)
 
       # If not, fall back to the base language (e.g., 'es')
       base_locale = locale&.split('-')&.first
-      base_locale.presence_in(I18n.config.config.available_locales_set)
+      base_locale.presence_in(I18n.config.available_locales_set)
     end
   end
 end
