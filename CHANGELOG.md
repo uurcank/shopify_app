@@ -1,6 +1,11 @@
 Unreleased
 ----------
 
+22.5.0 (November 28, 2024)
+----------
+- Add support for filters in webhook registration [1923](https://github.com/Shopify/shopify_app/pull/1923)
+-  Make `ShopifyApp.configuration.scope` default to empty list `[]` [1913](https://github.com/Shopify/shopify_app/pull/1913)
+
 22.4.0 (August 22, 2024)
 ----------
 - Add the `unified_admin_domain` configuration option for the unified admin domain.
